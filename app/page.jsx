@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { CheckCircle2, Lock, Send } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { CheckCircle2, Lock, Send, AlertCircle, Clock } from 'lucide-react'
 import { findStudentById } from '../src/data/students'
 
 export default function CertificateVerificationPortal() {
@@ -9,8 +9,18 @@ export default function CertificateVerificationPortal() {
   const [isLoading, setIsLoading] = useState(false)
   const [verifiedStudent, setVerifiedStudent] = useState(null)
   const [errorMessage, setErrorMessage] = useState('')
+  const [serverTime, setServerTime] = useState(new Date())
+  const [selectedPath, setSelectedPath] = useState(null)
 
   const LOADING_DURATION = 1500
+  const DEADLINE = new Date('2026-03-16T16:00:00+01:00')
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setServerTime(new Date())
+    }, 1000)
+    return () => clearInterval(timer)
+  }, [])
 
   const handleSearch = async () => {
     setErrorMessage('')
@@ -96,7 +106,7 @@ export default function CertificateVerificationPortal() {
                           setErrorMessage('')
                         }}
                         onKeyPress={handleKeyPress}
-                        placeholder="GTA-2026-xxxx-xxxx"
+                        placeholder="GTA-2026-7782-DIST"
                         disabled={isLoading}
                         className="w-full px-4 py-3 bg-muted border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-background placeholder:text-secondary disabled:opacity-50 disabled:cursor-not-allowed text-foreground transition-all"
                       />
@@ -151,6 +161,21 @@ export default function CertificateVerificationPortal() {
               >
                 ← New Search
               </button>
+
+              {/* Enrollment Status Banner - Only for main user */}
+              {verifiedStudent.id === 'GTA-2026-7782-DIST' && (
+                <div className="mb-6 bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-start gap-3">
+                  <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                  <div className="flex-1">
+                    <p className="text-sm font-bold text-amber-900">
+                      ENROLLMENT STATUS: PENDING
+                    </p>
+                    <p className="text-xs text-amber-800 mt-1">
+                      Server Provisioning Batch closes Monday, 16th March at 16:00 WAT.
+                    </p>
+                  </div>
+                </div>
+              )}
 
               {/* Verified Result Card */}
               <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm">
@@ -218,31 +243,160 @@ export default function CertificateVerificationPortal() {
                     </div>
                   </div>
 
-                  {/* Phase 2 Status */}
-                  <div className="bg-muted border border-border rounded-xl p-6">
-                    <p className="text-xs font-semibold text-secondary uppercase tracking-wider mb-3">
-                      Next Advancement
-                    </p>
-                    <div className="space-y-3">
-                      <h3 className="font-bold text-lg text-foreground">
-                        {verifiedStudent.phase2Program}
-                      </h3>
-                      <div className="flex items-baseline gap-2">
-                        <span className={`text-sm font-bold px-3 py-1 rounded-full ${
-                          verifiedStudent.phase2Status === 'CONFIRMED'
-                            ? 'bg-green-100 text-green-700'
-                            : verifiedStudent.phase2Status === 'RESERVED'
-                            ? 'bg-blue-100 text-blue-700'
-                            : 'bg-amber-100 text-amber-700'
-                        }`}>
-                          {verifiedStudent.phase2Status}
+                  {/* Phase 2 Enrollment Section - Only for main user */}
+                  {verifiedStudent.id === 'GTA-2026-7782-DIST' ? (
+                    <div className="space-y-6 border-t border-border pt-8">
+                      <div>
+                        <p className="text-xs font-semibold text-secondary uppercase tracking-wider mb-4">
+                          Academic Pathway & Enrollment
+                        </p>
+                        <h3 className="font-bold text-lg text-foreground mb-4">
+                          {verifiedStudent.phase2Program}
+                        </h3>
+                      </div>
+
+                      {/* Enrollment Options */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {/* Option 1: Standard Residency */}
+                        <div className={`border-2 rounded-xl p-6 transition-all cursor-pointer ${
+                          selectedPath === 'standard'
+                            ? 'border-accent bg-accent/5'
+                            : 'border-border hover:border-accent/50 bg-card'
+                        }`}
+                        onClick={() => setSelectedPath('standard')}
+                        >
+                          <div className="flex items-start justify-between mb-4">
+                            <div>
+                              <p className="text-sm font-semibold text-secondary uppercase tracking-wide">Option 1</p>
+                              <h4 className="text-lg font-bold text-foreground mt-1">Standard Residency</h4>
+                              <p className="text-xs text-secondary mt-1">Domestic Track</p>
+                            </div>
+                            <div className="w-5 h-5 rounded-full border-2 border-secondary flex items-center justify-center flex-shrink-0">
+                              {selectedPath === 'standard' && (
+                                <div className="w-3 h-3 rounded-full bg-accent"></div>
+                              )}
+                            </div>
+                          </div>
+                          <p className="text-2xl font-bold text-foreground mb-4">₦200,000</p>
+                          <div className="space-y-2 mb-4 text-sm text-foreground">
+                            <p className="flex items-center gap-2">
+                              <span className="w-1.5 h-1.5 rounded-full bg-accent"></span>
+                              Core Vulnerability Labs
+                            </p>
+                            <p className="flex items-center gap-2">
+                              <span className="w-1.5 h-1.5 rounded-full bg-accent"></span>
+                              4-Month Access
+                            </p>
+                            <p className="flex items-center gap-2">
+                              <span className="w-1.5 h-1.5 rounded-full bg-accent"></span>
+                              TrevoTech Certification
+                            </p>
+                          </div>
+                          <button
+                            onClick={() => setSelectedPath('standard')}
+                            className="w-full px-4 py-2.5 border-2 border-secondary text-secondary font-semibold rounded-xl hover:border-accent hover:text-accent transition-colors text-sm"
+                          >
+                            Select Standard
+                          </button>
+                        </div>
+
+                        {/* Option 2: Global Specialist Track */}
+                        <div className={`border-2 rounded-xl p-6 transition-all cursor-pointer relative ${
+                          selectedPath === 'global'
+                            ? 'border-amber-500 bg-amber-50'
+                            : 'border-border hover:border-accent/50 bg-card'
+                        }`}
+                        onClick={() => setSelectedPath('global')}
+                        >
+                          <div className="absolute -top-3 right-4 bg-amber-500 text-amber-50 px-3 py-1 rounded-full text-xs font-bold">
+                            RESERVED
+                          </div>
+                          <div className="flex items-start justify-between mb-4">
+                            <div>
+                              <p className="text-sm font-semibold text-secondary uppercase tracking-wide">Option 2</p>
+                              <h4 className="text-lg font-bold text-foreground mt-1">Global Specialist</h4>
+                              <p className="text-xs text-amber-700 mt-1 font-semibold">For Distinction Candidates</p>
+                            </div>
+                            <div className="w-5 h-5 rounded-full border-2 border-amber-500 flex items-center justify-center flex-shrink-0">
+                              {selectedPath === 'global' && (
+                                <div className="w-3 h-3 rounded-full bg-amber-500"></div>
+                              )}
+                            </div>
+                          </div>
+                          <p className="text-2xl font-bold text-foreground mb-4">₦250,000</p>
+                          <div className="space-y-2 mb-4 text-sm text-foreground">
+                            <p className="flex items-center gap-2">
+                              <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                              Everything in Standard
+                            </p>
+                            <p className="flex items-center gap-2">
+                              <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                              International Board Exam
+                            </p>
+                            <p className="flex items-center gap-2">
+                              <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                              Enterprise Tool Suite
+                            </p>
+                            <p className="flex items-center gap-2">
+                              <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                              Global Mentorship
+                            </p>
+                          </div>
+                          <button
+                            onClick={() => setSelectedPath('global')}
+                            className="w-full px-4 py-2.5 bg-amber-500 text-white font-semibold rounded-xl hover:bg-amber-600 active:scale-95 transition-all text-sm"
+                          >
+                            Confirm Global Enrollment
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Batch Info */}
+                      <div className="bg-muted border border-border rounded-xl p-4 text-xs text-secondary space-y-2">
+                        <p className="font-semibold text-foreground">Lab Server Allocation</p>
+                        <p>
+                          Lab servers are provisioned in synchronized cohorts. Unclaimed seats are automatically re-allocated to the Q3 waiting list upon expiration of the Monday deadline.
+                        </p>
+                      </div>
+
+                      {/* Server Time Display */}
+                      <div className="flex items-center justify-between bg-muted rounded-xl p-4 border border-border">
+                        <div className="flex items-center gap-2">
+                          <Clock className="w-4 h-4 text-secondary" />
+                          <span className="text-xs font-semibold text-secondary">Server Time</span>
+                        </div>
+                        <span className="text-sm font-mono font-bold text-foreground">
+                          {serverTime.toLocaleTimeString()}
                         </span>
                       </div>
-                      <p className="text-sm text-secondary">
-                        Enrollment opens {verifiedStudent.phase2Date}
-                      </p>
                     </div>
-                  </div>
+                  ) : (
+                    // Phase 2 Status for other students
+                    <div className="bg-muted border border-border rounded-xl p-6">
+                      <p className="text-xs font-semibold text-secondary uppercase tracking-wider mb-3">
+                        Next Advancement
+                      </p>
+                      <div className="space-y-3">
+                        <h3 className="font-bold text-lg text-foreground">
+                          {verifiedStudent.phase2Program}
+                        </h3>
+                        <div className="flex items-baseline gap-2">
+                          <span className={`text-sm font-bold px-3 py-1 rounded-full ${
+                            verifiedStudent.phase2Status === 'CONFIRMED'
+                              ? 'bg-green-100 text-green-700'
+                              : verifiedStudent.phase2Status === 'RESERVED'
+                              ? 'bg-blue-100 text-blue-700'
+                              : 'bg-amber-100 text-amber-700'
+                          }`}>
+                            {verifiedStudent.phase2Status}
+                          </span>
+                        </div>
+                        <p className="text-sm text-secondary">
+                          Enrollment opens {verifiedStudent.phase2Date}
+                        </p>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Verification Badge */}
                   <div className="border-t border-border pt-8">
